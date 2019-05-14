@@ -1,0 +1,93 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 28
+    useLibrary 'org.apache.http.legacy'
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+        flavorDimensions "versionCode"
+        applicationId "ren.perry.webapp"
+        resValue "string", "app_name", "WebApp"
+        buildConfigField 'String', 'HOME_URL', '"https://www.baidu.com"'
+    }
+
+    //签名
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('perry.properties').newDataInputStream())
+    signingConfigs {
+        release_key {
+            storeFile file(properties.getProperty("keystroe_storeFile"))
+            storePassword properties.getProperty("keystroe_storePassword")
+            keyAlias properties.getProperty("keystroe_keyAlias")
+            keyPassword properties.getProperty("keystroe_keyPassword")
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false     // 混淆
+            zipAlignEnabled false   // Zipalign优化
+        }
+        release {
+            minifyEnabled false      // 混淆
+            zipAlignEnabled true    // Zipalign优化
+            shrinkResources false    // 移除无用的resource文件
+            // 前一部分代表系统默认的android程序的混淆文件，该文件已经包含了基本的混淆声明，后一个文件是自己的定义混淆文件
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release_key
+        }
+    }
+
+    //配置自定义打包名称
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def date = new Date()
+            def formattedDate = date.format('yyyyMMdd')
+            def fileName = "${variant.productFlavors[0].name}_${variant.versionName}__${formattedDate}_${variant.buildType.name}.apk"
+            outputFileName = fileName
+        }
+    }
+
+    //配置多渠道打包
+    productFlavors {
+        lizhi{
+            versionCode 1
+            versionName "1.0"
+            applicationId "ren.perry.lizhi"
+            resValue "string", "app_name", "我爱南京"
+            buildConfigField 'String', 'HOME_URL', '"http://yoerking.com/static/music_player.html"'
+        }
+
+        perry{
+            versionCode 1
+            versionName "1.0"
+            applicationId "ren.perry.perry"
+            resValue "string", "app_name", "Perry"
+            buildConfigField 'String', 'HOME_URL', '"https://www.perry.ren"'
+        }
+    }
+
+    sourceSets{
+        main{
+        }
+
+        lizhi{
+            res.srcDirs = ["src/lizhi/res"]
+        }
+
+        perry{
+            res.srcDirs = ["src/perry/res"]
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:support-v4:28.0.0'
+    implementation 'com.android.support:design:28.0.0'
+    implementation 'com.just.agentweb:agentweb:4.0.3-alpha@aar'
+}
